@@ -19,45 +19,26 @@ app.get('/', (request, response) => {
 
 app.get('/weather', (request, response) => {
 
-  let lat = Number(request.query.lat);
-  let lon = Number(request.query.lon);
-  let searchQuery = request.query.searchQuery.toLocaleLowerCase();
+  try {
+    let { searchQuery, lat, lon } = request.query;
 
-  console.log(lat, lon, searchQuery);
+    let cityWeatherResult = weatherData.find(city => city.city_name.toLocaleLowerCase() === searchQuery.toLocaleLowerCase() || (`${city.lat}` === lat && `${city.lon}` === lon)
+    );
 
-  let cityWeatherResult = weatherData.find(city => city.lat === lat && city.lon === lon && city.city_name.toLocaleLowerCase() === searchQuery);
-  console.log(cityWeatherResult);
+    let forecastArray = cityWeatherResult.data.map(elements => new Forecast(elements));
+    response.send(forecastArray);
+  }
 
-  cityWeatherResult ? response.send(forecasting(cityWeatherResult)) : response.send(forecasting('City Unsupported', 500));
+  catch (e) {
+    response.status(500).send('City not supported');
+  }
 });
-
-let forecasting = (weatherForecast) =>{
-  let forecastArray = [];
-
-  weatherForecast.weatherData.map(city => {
-    let date = city.valid_date;
-    let description = `Low of ${city.low_temp}, high of ${city.high_temp} with ${city.weather.description}`;
-
-    forecastArray.push(new Forecast(date, description));
-  });
-  return forecastArray;
-};
-
-app.get((request, response) => {
-  response.send(serverError('Something went wrong.', 500));
-});
-
-let serverError = (message, status) =>{
-  return {error: message, status: status};
-};
 
 class Forecast {
-  constructor(date, description) {
-    this.date = date;
-    this.description = description;
+  constructor(value) {
+    this.valid_date = value.valid_date;
+    this.description = `${value.weather.description}`;
   }
 }
-
-
 
 app.listen(PORT, () => console.log(`listening on port ${PORT}`));
