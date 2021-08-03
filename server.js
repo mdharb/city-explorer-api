@@ -1,13 +1,12 @@
 'use strict';
 
 const express = require('express');
-const dotenv = require('dotenv');
+require('dotenv').config();
 const weatherData = require('./data/weather.json');
 const cors = require('cors');
 const { request, response } = require('express');
 
 const app = express();
-dotenv.config();
 app.use(cors());
 const PORT = process.env.PORT;
 
@@ -20,22 +19,37 @@ app.get('/', (request, response) => {
 
 app.get('/weather', (request, response) => {
 
-  let lat = request.query.lat;
-  let lon = request.query.lon;
-  let searchQuery = request.query.searchQuery;
+  let lat = Number(request.query.lat);
+  let lon = Number(request.query.lon);
+  let searchQuery = request.query.searchQuery.toLocaleLowerCase();
 
   console.log(lat, lon, searchQuery);
 
-  let cityWeatherData = weatherData.find(city => city.city_name === searchQuery);
-  console.log(cityWeatherData);
-  if(cityWeatherData === undefined) {
-    response.status(500).send('Unsupported city');
+  let cityWeatherResult = weatherData.find(city => city.lat === lat && city.lon === lon && city.city_name.toLocaleLowerCase() === searchQuery);
+  console.log(cityWeatherResult);
 
-  } else {
-    let cityForcasting = cityWeatherData.data.map(obj => new Forecast(obj.datetime, `Low of ${obj.low_temp}, high of ${obj.max_temp} with ${obj.weather.description.toLowerCase()}`));
-    response.send(cityForcasting);
-  }
+  cityWeatherResult ? response.send(forecasting(cityWeatherResult)) : response.send(forecasting('City Unsupported', 500));
 });
+
+let forecasting = (weatherForecast) =>{
+  let forecastArray = [];
+
+  weatherForecast.weatherData.map(city => {
+    let date = city.valid_date;
+    let description = `Low of ${city.low_temp}, high of ${city.high_temp} with ${city.weather.description}`;
+
+    forecastArray.push(new Forecast(date, description));
+  });
+  return forecastArray;
+};
+
+app.get((request, response) => {
+  response.send(serverError('Something went wrong.', 500));
+});
+
+let serverError = (message, status) =>{
+  return {error: message, status: status};
+};
 
 class Forecast {
   constructor(date, description) {
@@ -43,5 +57,7 @@ class Forecast {
     this.description = description;
   }
 }
+
+
 
 app.listen(PORT, () => console.log(`listening on port ${PORT}`));
