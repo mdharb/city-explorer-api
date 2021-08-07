@@ -11,18 +11,24 @@ let getWeather = async (request, response) => {
 
   let { lat, lon } = request.query;
 
-  let weatherUrl = `${WEATHERBIT_API_URL}?lat=${lat}&lon=${lon}&key=${WEATHERBIT_API_KEY}&units=I`;
+  let queryParams = {
+    params: {
+      lon: lon,
+      lat: lat,
+      key: WEATHERBIT_API_KEY
+    }
+  };
 
   try {
 
-    let result = await axios.get(weatherUrl);
+    let result = await axios.get(WEATHERBIT_API_URL, queryParams);
 
     let data = result.data.data.map(weather => {
       let weatherObj = new Forecast (weather.datetime, weather.weather.description);
       return weatherObj;
     });
 
-    response.status(200).send(data);
+    response.status(200).json(data);
 
   } catch (e) {
     console.error('error info: ', e);

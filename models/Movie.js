@@ -1,8 +1,8 @@
 class Movie {
 
-  constructor(title, description) {
+  constructor(title, overview) {
     this.title = title;
-    this.description = description;
+    this.overview = overview;
   }
 }
 
