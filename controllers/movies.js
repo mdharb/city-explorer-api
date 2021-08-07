@@ -11,14 +11,19 @@ let getMovies = async (request,response) => {
 
   let searchQuery = request.query.searchQuery;
 
-  const movieUrl = `${MOVIES_API_URL}?api_key=${MOVIES_API_KEY}&language=en-US&query=${searchQuery}&page=1&include_adult=false`;
+  let queryParams = {
+    params: {
+      key: MOVIES_API_KEY,
+      searchQuery: searchQuery
+    }
+  };
 
   try{
 
-    let result = await axios.get(movieUrl);
+    let result = await axios.get(MOVIES_API_URL, queryParams);
 
     let data = result.data.results.map(movie => {
-      let movieObj = new Movie(movie.title, movie.overview);
+      let movieObj = new Movie (movie.title, movie.overview);
       return movieObj;
     });
 
