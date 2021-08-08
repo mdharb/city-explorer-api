@@ -9,19 +9,19 @@ const MOVIES_API_URL = process.env.MOVIES_API_URL;
 
 let getMovies = async (request,response) => {
 
-  let searchQuery = request.query.searchQuery;
+  let query = request.query.searchQuery;
 
   let queryParams = {
     params: {
-      key: MOVIES_API_KEY,
-      searchQuery: searchQuery
+      api_key: MOVIES_API_KEY,
+      query
     }
   };
 
   try{
-
+console.log(MOVIES_API_KEY, MOVIES_API_URL, queryParams);
     let result = await axios.get(MOVIES_API_URL, queryParams);
-
+    console.log(result.data.results);
     let data = result.data.results.map(movie => {
       let movieObj = new Movie (movie.title, movie.overview);
       return movieObj;
